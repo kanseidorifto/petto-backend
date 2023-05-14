@@ -44,15 +44,3 @@ export const login = async ({ email, password }) => {
 
 	return { ...userData, token };
 };
-
-export const getUserInfo = async (userId) => {
-	const user = await UserProfileModel.findById(userId);
-
-	if (!user) {
-		throw new createHttpError.NotFound('User not found');
-	}
-
-	const { passwordHash, ...userData } = user._doc;
-
-	return userData;
-};

@@ -1,8 +1,8 @@
-import * as UserService from '../services/UserService.js';
+import * as AuthService from '../services/AuthService.js';
 
 export const register = async (req, res, next) => {
 	try {
-		const result = await UserService.register({
+		const result = await AuthService.register({
 			email: req.body.email,
 			password: req.body.password,
 			givenName: req.body.givenName,
@@ -18,21 +18,10 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
 	try {
-		const result = await UserService.login({
+		const result = await AuthService.login({
 			email: req.body.email,
 			password: req.body.password,
 		});
-
-		res.json(result);
-	} catch (err) {
-		console.log(err);
-		next(err);
-	}
-};
-
-export const getMe = async (req, res, next) => {
-	try {
-		const result = await UserService.getUserInfo(req.userId);
 
 		res.json(result);
 	} catch (err) {
