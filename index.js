@@ -5,10 +5,14 @@ import mongoose from 'mongoose';
 import fs from 'fs';
 import multer from 'multer';
 import cors from 'cors';
+import { randomUUID } from 'crypto';
+
+import checkAuth from './utils/checkAuth.js';
+import AuthRoutes from './routes/authRoutes.js';
 
 // configuration
 
-const PORT = process.env.NODE_PORT || 1337;
+const PORT = Number(process.env.NODE_PORT) || 8080;
 
 const app = express();
 
@@ -37,13 +41,19 @@ app.use(express.json());
 app.use(cors());
 app.use('/uploads', express.static('uploads'));
 
-
 // endpoints
+//
+app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
+	res.json({ url: `/uploads/${randomUUID()}` });
+});
+//
 
-
-
-
-
+app.use('/auth', AuthRoutes);
+//
+app.use((error, req, res, next) => {
+	// generic handler
+	res.status(error.status || 500).json({ message: error.message || 'Server error' });
+});
 // run
 app.listen(PORT, (err) => {
 	if (err) {
