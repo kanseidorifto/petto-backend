@@ -13,4 +13,6 @@ const UserProfileSchema = mongoose.Schema(
 	{ timestamps: true },
 );
 
+UserProfileSchema.index({ givenName: 'text', surname: 'text' });
+
 export default mongoose.model('UserProfile', UserProfileSchema);

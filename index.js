@@ -8,7 +8,8 @@ import cors from 'cors';
 import { randomUUID } from 'crypto';
 
 import checkAuth from './utils/checkAuth.js';
-import AuthRoutes from './routes/authRoutes.js';
+import AuthRoutes from './routes/AuthRoutes.js';
+import UserRoutes from './routes/UserRoutes.js';
 
 // configuration
 
@@ -42,14 +43,14 @@ app.use(cors());
 app.use('/uploads', express.static('uploads'));
 
 // endpoints
-//
 app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
 	res.json({ url: `/uploads/${randomUUID()}` });
 });
-//
-
+// routes
 app.use('/auth', AuthRoutes);
-//
+app.use('/user', UserRoutes);
+
+// error handler
 app.use((error, req, res, next) => {
 	// generic handler
 	res.status(error.status || 500).json({ message: error.message || 'Server error' });
