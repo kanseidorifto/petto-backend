@@ -1,9 +1,13 @@
 import createHttpError from 'http-errors';
 import * as PostService from '../services/PostService.js';
+import isObjectIdValid from '../utils/isObjectIdValid.js';
 
 export const getPost = async (req, res, next) => {
 	const postId = req.params.id;
 	try {
+		if (!isObjectIdValid(postId)) {
+			throw new createHttpError.BadRequest();
+		}
 		const post = await PostService.getPost(postId);
 
 		res.json(post);
@@ -72,7 +76,7 @@ export const deletePost = async (req, res, next) => {
 	try {
 		const post = await PostService.getPost(postId);
 
-		if (post.profile._id !== req.userId) {
+		if (post.profile._id != req.userId) {
 			throw new createHttpError.Forbidden();
 		}
 

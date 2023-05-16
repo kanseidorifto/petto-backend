@@ -15,6 +15,7 @@ export const getUserPosts = async (userId, page, limit) => {
 			foreignField: '_id',
 			as: 'profile',
 		})
+		.unwind('profile')
 		.lookup({
 			from: 'postlikes',
 			localField: '_id',
@@ -41,12 +42,43 @@ export const getUserPosts = async (userId, page, limit) => {
 };
 
 export const getPetPosts = async (petId, page, limit) => {
-	const posts = await PostTaggedPetModel.find(
-		{
-			petProfile: petId,
-		},
-		{ petProfile: 0, _id: 'post._id', profile: 'post.profile', writtenText: 'post.writtenText' },
-	)
+	const posts = await PostTaggedPetModel.aggregate()
+		.match({
+			petProfile: isObjectIdValid(petId),
+		})
+		.lookup({
+			from: 'userposts',
+			localField: 'post',
+			foreignField: '_id',
+			as: 'post',
+		})
+		.unwind('post')
+		.replaceRoot('post')
+		.lookup({
+			from: 'userprofiles',
+			localField: 'profile',
+			foreignField: '_id',
+			as: 'profile',
+		})
+		.unwind('profile')
+		.lookup({
+			from: 'postlikes',
+			localField: '_id',
+			foreignField: 'post',
+			as: 'likes',
+		})
+		.lookup({
+			from: 'postcomments',
+			localField: '_id',
+			foreignField: 'post',
+			as: 'comments',
+		})
+		.lookup({
+			from: 'posttaggedpets',
+			localField: '_id',
+			foreignField: 'post',
+			as: 'taggedPets',
+		})
 		.skip(page * limit)
 		.limit(limit)
 		.exec();
@@ -55,13 +87,16 @@ export const getPetPosts = async (petId, page, limit) => {
 };
 
 export const getPost = async (postId) => {
-	const post = await UserPostModel.match({ _id: isObjectIdValid(postId) })
+	const post = await UserPostModel.aggregate()
+		.match({ _id: isObjectIdValid(postId) })
+		.limit(1)
 		.lookup({
 			from: 'userprofiles',
 			localField: 'profile',
 			foreignField: '_id',
 			as: 'profile',
 		})
+		.unwind('profile')
 		.lookup({
 			from: 'postlikes',
 			localField: '_id',
@@ -82,10 +117,10 @@ export const getPost = async (postId) => {
 		})
 		.exec();
 
-	if (!post) {
+	if (!post[0]) {
 		throw new createHttpError.NotFound('Post not found');
 	}
-	return post;
+	return post[0];
 };
 
 export const createPost = async (userId, writtenText, mediaLocations, taggedPetList) => {
