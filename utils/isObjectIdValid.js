@@ -5,5 +5,5 @@ import { Types } from 'mongoose';
  * @param {string} id
  */
 export default (id) => {
-	return Types.ObjectId.isValid(id) && new Types.ObjectId(id) == id;
+	return Types.ObjectId.isValid(id) && new Types.ObjectId(id) == id ? new Types.ObjectId(id) : null;
 };

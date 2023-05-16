@@ -10,6 +10,7 @@ import { randomUUID } from 'crypto';
 import checkAuth from './utils/checkAuth.js';
 import AuthRoutes from './routes/AuthRoutes.js';
 import UserRoutes from './routes/UserRoutes.js';
+import PostRoutes from './routes/PostRoutes.js';
 
 // configuration
 
@@ -49,6 +50,7 @@ app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
 // routes
 app.use('/auth', AuthRoutes);
 app.use('/user', UserRoutes);
+app.use('/post', PostRoutes);
 
 // error handler
 app.use((error, req, res, next) => {
