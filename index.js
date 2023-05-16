@@ -11,6 +11,7 @@ import checkAuth from './utils/checkAuth.js';
 import AuthRoutes from './routes/AuthRoutes.js';
 import UserRoutes from './routes/UserRoutes.js';
 import PostRoutes from './routes/PostRoutes.js';
+import PetRoutes from './routes/PetRoutes.js';
 
 // configuration
 
@@ -51,6 +52,7 @@ app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
 app.use('/auth', AuthRoutes);
 app.use('/user', UserRoutes);
 app.use('/post', PostRoutes);
+app.use('/pet', PetRoutes);
 
 // error handler
 app.use((error, req, res, next) => {
