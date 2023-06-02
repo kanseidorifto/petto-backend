@@ -34,6 +34,15 @@ export const getUserPosts = async (userId, page, limit) => {
 			foreignField: 'post',
 			as: 'taggedPets',
 		})
+		.lookup({
+			from: 'petprofiles',
+			localField: 'taggedPets.petProfile',
+			foreignField: '_id',
+			as: 'taggedPets.petProfile',
+		})
+		.addFields({
+			taggedPets: '$taggedPets.petProfile',
+		})
 		.skip(page * limit)
 		.limit(limit)
 		.exec();
