@@ -1,6 +1,8 @@
 import createHttpError from 'http-errors';
 import * as UserService from '../services/UserService.js';
 import isObjectIdValid from '../utils/isObjectIdValid.js';
+import { uploadToBucket } from '../utils/bucketActions.js';
+import { randomUUID } from 'crypto';
 
 export const getMe = async (req, res, next) => {
 	try {
@@ -16,11 +18,16 @@ export const getMe = async (req, res, next) => {
 export const updateMe = async (req, res, next) => {
 	try {
 		const avatarFiles = req.files['avatarMedia'];
-		const avatarFile = avatarFiles && avatarFiles[0];
-		const avatarUrl = avatarFile ? `/${avatarFile.destination}/${avatarFile.filename}` : undefined;
+		const avatarFile = avatarFiles && avatarFiles[0].buffer;
 		const coverFiles = req.files['coverMedia'];
-		const coverFile = coverFiles && coverFiles[0];
-		const coverUrl = coverFile ? `/${coverFile.destination}/${coverFile.filename}` : undefined;
+		const coverFile = coverFiles && coverFiles[0].buffer;
+
+		const avatarFilename = avatarFile ? `${randomUUID()}.png` : undefined;
+		const coverFilename = coverFile ? `${randomUUID()}.png` : undefined;
+
+		const avatarUrl = avatarFilename && (await uploadToBucket(avatarFile, avatarFilename));
+		const coverUrl = coverFilename && (await uploadToBucket(coverFile, coverFilename));
+
 		await UserService.updateUserInfo(req.userId, {
 			avatarUrl,
 			coverUrl,

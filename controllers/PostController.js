@@ -1,6 +1,8 @@
 import createHttpError from 'http-errors';
 import * as PostService from '../services/PostService.js';
 import isObjectIdValid from '../utils/isObjectIdValid.js';
+import { uploadToBucket } from '../utils/bucketActions.js';
+import { randomUUID } from 'crypto';
 
 export const getPost = async (req, res, next) => {
 	const postId = req.params.id;
@@ -54,10 +56,17 @@ export const getPetPostList = async (req, res, next) => {
 
 export const createPost = async (req, res, next) => {
 	const writtenText = req.body.writtenText;
-	const mediaLocations = req.files?.map((file) => `/${file.destination}/${file.filename}`);
-	// const mediaLocations = req.body.mediaLocations;
+
+	const files = req.files;
+
 	const taggedPetList = JSON.parse(req.body.taggedPetList);
 	try {
+		const mediaLocations = await Promise.all(
+			files.map(async (file) => {
+				const fileExtName = file.originalname.split('.').pop();
+				return await uploadToBucket(file.buffer, `${randomUUID()}.${fileExtName}`);
+			}),
+		);
 		const post = await PostService.createPost(
 			req.userId,
 			writtenText,
