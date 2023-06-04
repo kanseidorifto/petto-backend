@@ -9,6 +9,8 @@ import isObjectIdValid from '../utils/isObjectIdValid.js';
 export const getUserPosts = async (userId, page, limit) => {
 	const posts = await UserPostModel.aggregate()
 		.match({ profile: isObjectIdValid(userId) })
+		.skip(page * limit)
+		.limit(limit)
 		.lookup({
 			from: 'userprofiles',
 			localField: 'profile',
@@ -28,6 +30,33 @@ export const getUserPosts = async (userId, page, limit) => {
 			foreignField: 'post',
 			as: 'comments',
 		})
+		.unwind({
+			path: '$comments',
+			preserveNullAndEmptyArrays: true,
+		})
+		.lookup({
+			from: 'userprofiles',
+			localField: 'comments.profile',
+			foreignField: '_id',
+			as: 'comments.profile',
+		})
+		.unwind({
+			path: '$comments.profile',
+			preserveNullAndEmptyArrays: true,
+		})
+		.group({
+			_id: '$_id',
+			root: {
+				$mergeObjects: '$$ROOT',
+			},
+			comments: {
+				$push: '$comments',
+			},
+		})
+		.replaceRoot({
+			$mergeObjects: ['$root', '$$ROOT'],
+		})
+		.project({ root: 0 })
 		.lookup({
 			from: 'posttaggedpets',
 			localField: '_id',
@@ -43,8 +72,7 @@ export const getUserPosts = async (userId, page, limit) => {
 		.addFields({
 			taggedPets: '$taggedPets.petProfile',
 		})
-		.skip(page * limit)
-		.limit(limit)
+		.sort({ createdAt: -1 })
 		.exec();
 
 	return posts;
@@ -55,6 +83,9 @@ export const getPetPosts = async (petId, page, limit) => {
 		.match({
 			petProfile: isObjectIdValid(petId),
 		})
+		.sort({ createdAt: -1 })
+		.skip(page * limit)
+		.limit(limit)
 		.lookup({
 			from: 'userposts',
 			localField: 'post',
@@ -88,8 +119,6 @@ export const getPetPosts = async (petId, page, limit) => {
 			foreignField: 'post',
 			as: 'taggedPets',
 		})
-		.skip(page * limit)
-		.limit(limit)
 		.exec();
 
 	return posts;
@@ -148,6 +177,7 @@ export const createPost = async (userId, writtenText, mediaLocations, taggedPetL
 
 		return post.populate('profile');
 	} catch (err) {
+		console.error(err);
 		throw new createHttpError.Conflict();
 	}
 };

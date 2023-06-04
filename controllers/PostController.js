@@ -54,8 +54,9 @@ export const getPetPostList = async (req, res, next) => {
 
 export const createPost = async (req, res, next) => {
 	const writtenText = req.body.writtenText;
-	const mediaLocations = req.body.mediaLocations;
-	const taggedPetList = req.body.taggedPetList;
+	const mediaLocations = req.files?.map((file) => `/${file.destination}/${file.filename}`);
+	// const mediaLocations = req.body.mediaLocations;
+	const taggedPetList = JSON.parse(req.body.taggedPetList);
 	try {
 		const post = await PostService.createPost(
 			req.userId,

@@ -4,13 +4,23 @@ import * as UserController from '../controllers/UserController.js';
 import checkAuth from '../utils/checkAuth.js';
 import handleValidationErrors from '../utils/handleValidationErrors.js';
 import { userUpdateValidation, userSearchValidation } from '../validations/user.js';
+import { uploadStorage } from '../utils/uploadStorage.js';
 
 const UserRoutes = Router();
 
 UserRoutes.use(checkAuth);
 
 UserRoutes.get('/me', UserController.getMe);
-UserRoutes.patch('/me', userUpdateValidation, handleValidationErrors, UserController.updateMe);
+UserRoutes.patch(
+	'/me',
+	uploadStorage.fields([
+		{ name: 'avatarMedia', maxCount: 1 },
+		{ name: 'coverMedia', maxCount: 1 },
+	]),
+	userUpdateValidation,
+	handleValidationErrors,
+	UserController.updateMe,
+);
 UserRoutes.get('/', userSearchValidation, handleValidationErrors, UserController.searchUsersByName);
 UserRoutes.get('/friends', UserController.getFriendList);
 UserRoutes.get('/:id', UserController.getById);

@@ -15,9 +15,15 @@ export const getMe = async (req, res, next) => {
 
 export const updateMe = async (req, res, next) => {
 	try {
+		const avatarFiles = req.files['avatarMedia'];
+		const avatarFile = avatarFiles && avatarFiles[0];
+		const avatarUrl = avatarFile ? `/${avatarFile.destination}/${avatarFile.filename}` : undefined;
+		const coverFiles = req.files['coverMedia'];
+		const coverFile = coverFiles && coverFiles[0];
+		const coverUrl = coverFile ? `/${coverFile.destination}/${coverFile.filename}` : undefined;
 		await UserService.updateUserInfo(req.userId, {
-			avatarUrl: req.body.avatarUrl,
-			coverUrl: req.body.coverUrl,
+			avatarUrl,
+			coverUrl,
 			givenName: req.body.givenName,
 			surname: req.body.surname,
 			bio: req.body.bio,
