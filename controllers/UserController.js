@@ -28,7 +28,7 @@ export const updateMe = async (req, res, next) => {
 		const avatarUrl = avatarFilename && (await uploadToBucket(avatarFile, avatarFilename));
 		const coverUrl = coverFilename && (await uploadToBucket(coverFile, coverFilename));
 
-		await UserService.updateUserInfo(req.userId, {
+		const user = await UserService.updateUserInfo(req.userId, {
 			avatarUrl,
 			coverUrl,
 			givenName: req.body.givenName,
@@ -36,7 +36,7 @@ export const updateMe = async (req, res, next) => {
 			bio: req.body.bio,
 		});
 
-		res.json({ success: true });
+		res.json(user);
 	} catch (err) {
 		console.log(err);
 		next(err);
