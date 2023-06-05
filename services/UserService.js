@@ -31,7 +31,7 @@ export const updateUserInfo = async (userId, values) => {
 		throw new createHttpError.NotFound('User not found');
 	}
 
-	await UserProfileModel.updateOne(
+	const updatedUser = await UserProfileModel.updateOne(
 		{
 			_id: userId,
 		},
@@ -42,8 +42,11 @@ export const updateUserInfo = async (userId, values) => {
 			surname: values.surname,
 			bio: values.bio,
 		},
+		{
+			returnDocument: 'after',
+		},
 	);
-	return true;
+	return updatedUser;
 };
 
 export const getFriendList = async (userId) => {
