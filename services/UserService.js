@@ -31,7 +31,7 @@ export const updateUserInfo = async (userId, values) => {
 		throw new createHttpError.NotFound('User not found');
 	}
 
-	const updatedUser = await UserProfileModel.updateOne(
+	const updatedUser = await UserProfileModel.findOneAndUpdate(
 		{
 			_id: userId,
 		},
