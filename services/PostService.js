@@ -83,7 +83,6 @@ export const getPetPosts = async (petId, page, limit) => {
 		.match({
 			petProfile: isObjectIdValid(petId),
 		})
-		.sort({ createdAt: -1 })
 		.skip(page * limit)
 		.limit(limit)
 		.lookup({
@@ -113,12 +112,40 @@ export const getPetPosts = async (petId, page, limit) => {
 			foreignField: 'post',
 			as: 'comments',
 		})
+		.unwind({
+			path: '$comments',
+			preserveNullAndEmptyArrays: true,
+		})
+		.lookup({
+			from: 'userprofiles',
+			localField: 'comments.profile',
+			foreignField: '_id',
+			as: 'comments.profile',
+		})
+		.unwind({
+			path: '$comments.profile',
+			preserveNullAndEmptyArrays: true,
+		})
+		.group({
+			_id: '$_id',
+			root: {
+				$mergeObjects: '$$ROOT',
+			},
+			comments: {
+				$push: '$comments',
+			},
+		})
+		.replaceRoot({
+			$mergeObjects: ['$root', '$$ROOT'],
+		})
+		.project({ root: 0 })
 		.lookup({
 			from: 'posttaggedpets',
 			localField: '_id',
 			foreignField: 'post',
 			as: 'taggedPets',
 		})
+		.sort({ createdAt: -1 })
 		.exec();
 
 	return posts;
