@@ -1,10 +1,108 @@
 import createHttpError from 'http-errors';
 
+import UserFriendshipModel from '../models/profile/UserFriendshipModel.js';
 import UserPostModel from '../models/post/UserPostModel.js';
 import PostLikeModel from '../models/post/PostLikeModel.js';
 import PostCommentModel from '../models/post/PostCommentModel.js';
 import PostTaggedPetModel from '../models/post/PostTaggedPetModel.js';
 import isObjectIdValid from '../utils/isObjectIdValid.js';
+
+export const getUserFeed = async (userId, page, limit) => {
+	const posts = await UserFriendshipModel.aggregate()
+		.match({
+			$or: [
+				{ profileRequest: isObjectIdValid(userId) },
+				{ profileAccept: isObjectIdValid(userId) },
+			],
+			// status: 1,
+		})
+		.lookup({
+			from: 'userposts',
+			let: { profileRequest: '$profileRequest', profileAccept: '$profileAccept' },
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$or: [
+								{ $eq: ['$profile', '$$profileRequest'] },
+								{ $gte: ['$profile', '$$profileAccept'] },
+							],
+						},
+					},
+				},
+			],
+			as: 'posts',
+		})
+		.unwind('$posts')
+		.replaceRoot('$posts')
+		.skip(page * limit)
+		.limit(limit)
+		.lookup({
+			from: 'userprofiles',
+			localField: 'profile',
+			foreignField: '_id',
+			as: 'profile',
+		})
+		.unwind('profile')
+		.lookup({
+			from: 'postlikes',
+			localField: '_id',
+			foreignField: 'post',
+			as: 'likes',
+		})
+		.lookup({
+			from: 'postcomments',
+			localField: '_id',
+			foreignField: 'post',
+			as: 'comments',
+		})
+		.unwind({
+			path: '$comments',
+			preserveNullAndEmptyArrays: true,
+		})
+		.lookup({
+			from: 'userprofiles',
+			localField: 'comments.profile',
+			foreignField: '_id',
+			as: 'comments.profile',
+		})
+		.unwind({
+			path: '$comments.profile',
+			preserveNullAndEmptyArrays: true,
+		})
+		.group({
+			_id: '$_id',
+			root: {
+				$mergeObjects: '$$ROOT',
+			},
+			comments: {
+				$push: '$comments',
+			},
+		})
+		.replaceRoot({
+			$mergeObjects: ['$root', '$$ROOT'],
+		})
+		.project({ root: 0 })
+		.lookup({
+			from: 'posttaggedpets',
+			localField: '_id',
+			foreignField: 'post',
+			as: 'taggedPets',
+		})
+		.lookup({
+			from: 'petprofiles',
+			localField: 'taggedPets.petProfile',
+			foreignField: '_id',
+			as: 'taggedPets.petProfile',
+		})
+		.addFields({
+			taggedPets: '$taggedPets.petProfile',
+		})
+		.sort({ createdAt: -1 })
+		.exec();
+
+	return posts;
+};
 
 export const getUserPosts = async (userId, page, limit) => {
 	const posts = await UserPostModel.aggregate()

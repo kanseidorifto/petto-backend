@@ -30,6 +30,17 @@ export const getMyPostList = async (req, res, next) => {
 	}
 };
 
+export const getMyFeed = async (req, res, next) => {
+	try {
+		const postList = await PostService.getUserFeed(req.userId, 0, 10);
+
+		res.json(postList);
+	} catch (err) {
+		console.log(err);
+		next(err);
+	}
+};
+
 export const getUserPostList = async (req, res, next) => {
 	const userId = req.query.id;
 	try {
