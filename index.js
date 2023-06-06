@@ -23,7 +23,13 @@ mongoose
 	.catch((err) => console.error('DB Error!', err));
 
 app.use(express.json());
-app.use(cors());
+app.use(
+	cors({
+		origin: '*',
+		methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+		headers: ['Content-Type', 'Access-Control-Allow-Origin'],
+	}),
+);
 app.use('/uploads', express.static('uploads'));
 
 // endpoints
