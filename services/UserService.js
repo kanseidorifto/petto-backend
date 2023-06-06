@@ -78,6 +78,13 @@ export const getOutcomingFriendList = async (userId) => {
 
 export const createFriendRequest = async (profileRequestId, profileAcceptId) => {
 	try {
+		const request = await UserFriendshipModel.findOne({
+			profileRequest: profileAcceptId,
+			profileAccept: profileRequestId,
+		});
+		if (request) {
+			throw new createHttpError.Conflict();
+		}
 		const doc = new UserFriendshipModel({
 			profileRequest: profileRequestId,
 			profileAccept: profileAcceptId,
