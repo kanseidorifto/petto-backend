@@ -11,6 +11,7 @@ PostRoutes.use(checkAuth);
 PostRoutes.get('/me', PostController.getMyPostList);
 PostRoutes.post('/me', memoryStorage.array('mediaList'), PostController.createPost);
 PostRoutes.get('/feed', PostController.getMyFeed);
+PostRoutes.get('/feed/all', PostController.getAllPostList);
 PostRoutes.get('/user', PostController.getUserPostList);
 PostRoutes.get('/pet', PostController.getPetPostList);
 PostRoutes.post('/like', PostController.createLike);
