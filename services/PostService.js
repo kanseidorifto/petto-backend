@@ -145,6 +145,15 @@ export const getPetPosts = async (petId, page, limit) => {
 			foreignField: 'post',
 			as: 'taggedPets',
 		})
+		.lookup({
+			from: 'petprofiles',
+			localField: 'taggedPets.petProfile',
+			foreignField: '_id',
+			as: 'taggedPets.petProfile',
+		})
+		.addFields({
+			taggedPets: '$taggedPets.petProfile',
+		})
 		.sort({ createdAt: -1 })
 		.exec();
 
